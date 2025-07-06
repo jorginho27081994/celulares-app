@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: db_mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: celulares_db
+    networks:
+      - celulares-net
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+    networks:
+      - celulares-net
+
+  servicio-login:
+    build: ./servicio-login
+    container_name: login_service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - celulares-net
+
+  servicio-celulares:
+    build: ./servicio-celulares
+    container_name: celulares_service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - celulares-net
+
+  servicio-clientes:
+    build: ./servicio-clientes
+    container_name: clientes_service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - celulares-net
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - servicio-login
+      - servicio-celulares
+      - servicio-clientes
+    networks:
+      - celulares-net
+
+networks:
+  celulares-net:
+    driver: bridge
